@@ -1,5 +1,8 @@
 *.svg
+*.sublime-project
+*.obj
+*.json
+
 simple
 svg
-*.sublime-project
 svgpathtools
