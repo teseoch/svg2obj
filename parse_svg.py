@@ -86,6 +86,7 @@ def convert_svg(input_svg, output):
 
             # print(xx, len(ts))
             param_ts = []
+            # print(piece)
 
             iprev = None
 
@@ -98,6 +99,8 @@ def convert_svg(input_svg, output):
                 if not iprev:
                     istart = v_index
 
+                # if xy[1] < -1000000:
+                #     asd
                 vertices += "v " + str(xy[0]) + " " + str(xy[1]) + " 0\n"
 
                 if iprev:
