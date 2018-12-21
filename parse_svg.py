@@ -1,17 +1,18 @@
 import svgpathtools.svgpathtools as svg
 import json
 import argparse
+import RationalBezier as rb
 
 
 SAMPLE_MAX_DEPTH = 5
 SAMPLE_ERROR = 1e-3
 
 
-def complex_to_point(p, trafo):
+def complex_to_point(p):
     return [p.real, p.imag]
 
 
-def complex_to_vect(p, trafo):
+def complex_to_vect(p):
     return [p.real, p.imag]
 
 
@@ -66,94 +67,88 @@ def convert_svg(input_svg, output):
     c_index = 0
     for ii in range(len(paths)):
         tmp = paths[ii]
-        trafo = tmp.transform
         path = tmp.path
 
         print(str(ii+1) + "/" + str(len(paths)) + " n sub paths: " + str(len(path)))
 
-        xx = 0
-        for piece in path:
-            # length = piece.length()
-            # n_samples = min(max(2, int(round(length)/5)),10000)
-            # print(xx, piece)
-            xx += 1
-
-            # ts = np.linspace(0, 1, n_samples)
-            ts = compute_samples(piece)
-
-            if len(ts) <= 0:
-                continue
-
-            # print(xx, len(ts))
-            param_ts = []
-            # print(piece)
-
-            iprev = None
-
-            for param_t in ts:
-                # param_t = piece.ilength(t)
-                param_ts.append(param_t)
-                p = piece.point(param_t)
-                xy = complex_to_point(p, trafo)
-
-                if not iprev:
-                    istart = v_index
-
-                # if xy[1] < -1000000:
-                #     asd
-                vertices += "v " + str(xy[0]) + " " + str(xy[1]) + " 0\n"
-
-                if iprev:
-                    lines += "l " + str(iprev) + " " + str(v_index) + "\n"
-
-                iprev = v_index
-
-                v_index += 1
-
-            json_obj = {}
-            json_obj["v_ids"] = list(range(istart-1, v_index-1))
-            istart = None
-            json_obj["paras"] = param_ts
-            json_obj["curve_id"] = c_index
-            c_index += 1
-
-            is_set = False
-
-            if isinstance(piece, svg.path.Line):
-                json_obj["type"] = "Line"
-                json_obj["start"] = complex_to_point(piece.start, trafo)
-                json_obj["end"] = complex_to_point(piece.end, trafo)
-
-                is_set = True
-            elif isinstance(piece, svg.path.QuadraticBezier):
-                json_obj["type"] = "BezierCurve"
-                json_obj["degree"] = 2
-
-                json_obj["poles"] = [complex_to_point(piece.start, trafo), complex_to_point(piece.control, trafo), complex_to_point(piece.end, trafo)]
-
-                is_set = True
-            elif isinstance(piece, svg.path.CubicBezier):
-                json_obj["type"] = "BezierCurve"
-                json_obj["degree"] = 3
-                json_obj["poles"] = [complex_to_point(piece.start, trafo), complex_to_point(piece.control1, trafo), complex_to_point(piece.control2, trafo), complex_to_point(piece.end, trafo)]
-
-                is_set = True
-            elif isinstance(piece, svg.path.Arc):
-                json_obj["type"] = "Arc"
-                json_obj["theta"] = piece.theta
-                json_obj["delta"] = piece.delta
-                json_obj["rot_matrix"] = complex_to_point(piece.rot_matrix, None)
-                json_obj["radius"] = complex_to_vect(piece.radius, trafo)
-                json_obj["center"] = complex_to_point(piece.center, trafo)
-
-                is_set = True
-
-            if is_set:
-                json_data.append(json_obj)
+        for pieces in path:
+            if isinstance(pieces, svg.path.Arc):
+                if abs(abs(pieces.delta)-180) < 1e-5:
+                    pieces = [rb.RationalBezier(pieces, tstart=0, tend=0.5), rb.RationalBezier(pieces, tstart=0.5, tend=1)]
+                else:
+                    pieces = [rb.RationalBezier(pieces)]
             else:
-                print(type(piece))
-                print(piece)
-                assert(False)
+                pieces = [pieces]
+
+            for piece in pieces:
+                ts = compute_samples(piece)
+
+                if len(ts) <= 0:
+                    continue
+
+
+                param_ts = []
+
+                iprev = None
+
+                for param_t in ts:
+                    param_ts.append(param_t)
+                    p = piece.point(param_t)
+                    xy = complex_to_point(p)
+
+                    if not iprev:
+                        istart = v_index
+
+                    vertices += "v " + str(xy[0]) + " " + str(xy[1]) + " 0\n"
+
+                    if iprev:
+                        lines += "l " + str(iprev) + " " + str(v_index) + "\n"
+
+                    iprev = v_index
+
+                    v_index += 1
+
+                json_obj = {}
+                json_obj["v_ids"] = list(range(istart-1, v_index-1))
+                istart = None
+                json_obj["paras"] = param_ts
+                json_obj["curve_id"] = c_index
+                c_index += 1
+
+                is_set = False
+
+                if isinstance(piece, svg.path.Line):
+                    json_obj["type"] = "Line"
+                    json_obj["start"] = complex_to_point(piece.start)
+                    json_obj["end"] = complex_to_point(piece.end)
+
+                    is_set = True
+                elif isinstance(piece, svg.path.QuadraticBezier):
+                    json_obj["type"] = "BezierCurve"
+                    json_obj["degree"] = 2
+
+                    json_obj["poles"] = [complex_to_point(piece.start), complex_to_point(piece.control), complex_to_point(piece.end)]
+
+                    is_set = True
+                elif isinstance(piece, svg.path.CubicBezier):
+                    json_obj["type"] = "BezierCurve"
+                    json_obj["degree"] = 3
+                    json_obj["poles"] = [complex_to_point(piece.start), complex_to_point(piece.control1), complex_to_point(piece.control2), complex_to_point(piece.end)]
+
+                    is_set = True
+                elif isinstance(piece, rb.RationalBezier):
+                    json_obj["type"] = "RationalBezier"
+                    json_obj["poles"] = [complex_to_point(piece.start), complex_to_point(piece.control), complex_to_point(piece.end)]
+                    json_obj["weigths"] = [piece.weights[0], piece.weights[1], piece.weights[2]]
+
+                    is_set = True
+
+                if is_set:
+                    json_data.append(json_obj)
+                else:
+                    print(type(piece))
+                    print(piece)
+                    assert(False)
 
         lines += "\n"
 
