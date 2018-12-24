@@ -36,7 +36,7 @@ def compute_samples_aux(curve, start, end, start_point, end_point, error, max_de
     if abs(length) < 1e-10:
         return []
 
-    if ((abs(length2 - length) > error) and (length2 - length)/length > error) and (depth <= max_depth):
+    if (abs(length2 - length) > error) and (depth <= max_depth):
         depth += 1
         res1 = compute_samples_aux(curve, start, mid, start_point, mid_point, error, max_depth, depth)
         res2 = compute_samples_aux(curve, mid, end, mid_point, end_point, error, max_depth, depth)
