@@ -4,10 +4,10 @@ import random
 import parse_svg as ps
 
 if __name__ == '__main__':
-    data_folder = 'diff_curves'
+    data_folder = 'svg'
     working_folder = 'working'
     done_folder = 'done'
-    out_folder = 'diff_curves_out'
+    out_folder = 'out'
     current_folder = os.getcwd()
 
     while True:

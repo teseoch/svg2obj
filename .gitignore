@@ -2,7 +2,11 @@
 *.sublime-project
 *.obj
 *.json
+*.geo
+*.msh
+*.step
 
 simple
 svg
 svgpathtools
+__pycache__
