@@ -17,7 +17,7 @@ def complex_to_vect(p):
 
 
 def compute_samples(curve, start=0, end=1, error=SAMPLE_ERROR, max_depth=SAMPLE_MAX_DEPTH, depth=0):
-    return compute_samples_aux(curve, 0, 1, curve.point(start), curve.point(end), error, max_depth, depth)
+    return compute_samples_aux(curve, start, end, curve.point(start), curve.point(end), error, max_depth, depth)
 
 
 def compute_samples_aux(curve, start, end, start_point, end_point, error, max_depth, depth):
