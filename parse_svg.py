@@ -1,5 +1,6 @@
 import svgpathtools.svgpathtools as svg
 import json
+import math
 import argparse
 import RationalBezier as rb
 
@@ -73,8 +74,14 @@ def convert_svg(input_svg, output):
 
         for pieces in path:
             if isinstance(pieces, svg.path.Arc):
-                if abs(abs(pieces.delta)-180) < 1e-5:
-                    pieces = [rb.RationalBezier(pieces, tstart=0, tend=0.5), rb.RationalBezier(pieces, tstart=0.5, tend=1)]
+                if abs(pieces.delta) > 120:
+                    n_pices = math.ceil(abs(pieces.delta) / 120)
+                    tmp = []
+                    for p in range(n_pices):
+                        t0 = float(p)/n_pices
+                        t1 = float(p+1)/n_pices
+                        tmp.append(rb.RationalBezier(pieces, tstart=t0, tend=t1))
+                    pieces = tmp
                 else:
                     pieces = [rb.RationalBezier(pieces)]
             else:
