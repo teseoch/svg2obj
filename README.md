@@ -25,7 +25,7 @@ run `python parse_svg.py file.svg out` to generate `out.obj` and `out.json`
 
 The obj contains lines and the JSON has this format:
 
-```json
+```
 [
     {
         "v_ids": [ ... ],       list vertex ids mapping to the vertex id in the obj file
