@@ -72,14 +72,18 @@ def convert_svg(input_svg, output):
 
         print(str(ii+1) + "/" + str(len(paths)) + " n sub paths: " + str(len(path)))
 
+        first = True
         for pieces in path:
             if isinstance(pieces, svg.path.Arc):
+                if first:
+                    if abs(pieces.start - path[-1].end) < 1e-10:
+                        pieces.start = path[-1].end
                 if abs(pieces.delta) > 120:
                     n_pices = math.ceil(abs(pieces.delta) / 120)
                     tmp = []
                     for p in range(n_pices):
                         t0 = float(p)/n_pices
-                        t1 = float(p+1)/n_pices
+                        t1 = float(p + 1) / n_pices
                         tmp.append(rb.RationalBezier(pieces, tstart=t0, tend=t1))
                     pieces = tmp
                 else:
@@ -87,6 +91,7 @@ def convert_svg(input_svg, output):
             else:
                 pieces = [pieces]
 
+            first = False
             for piece in pieces:
                 ts = compute_samples(piece)
 
